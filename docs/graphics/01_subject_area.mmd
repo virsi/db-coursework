@@ -1,0 +1,43 @@
+%% Лист 1. Изображение предметной области.
+%% Ключевые сущности АС ОУДО и их роли в учебном процессе.
+flowchart LR
+    subgraph Administration["Администрация"]
+        Employee["Сотрудник<br/>(администратор)"]
+    end
+
+    subgraph Teaching["Преподавательский состав"]
+        Teacher["Преподаватель"]
+    end
+
+    subgraph Learning["Студенты"]
+        Student["Студент"]
+    end
+
+    subgraph Curriculum["Учебный процесс"]
+        Discipline["Дисциплина"]
+        Course["Курс"]
+        Task["Задание / Вариант"]
+        Grade["Оценка"]
+    end
+
+    subgraph Documents["Документооборот"]
+        ContractEdu["Договор<br/>об обучении"]
+        ContractEmp["Трудовой<br/>договор"]
+    end
+
+    Employee -->|управляет| Discipline
+    Employee -->|формирует| Course
+    Employee -->|заключает| ContractEdu
+    Employee -->|заключает| ContractEmp
+
+    ContractEdu --> Student
+    ContractEmp --> Teacher
+
+    Teacher -->|ведёт| Course
+    Discipline -->|реализуется через| Course
+
+    Student -->|записывается на| Course
+    Teacher -->|выдаёт| Task
+    Task -->|выполняется| Student
+    Student -->|получает| Grade
+    Grade -->|за| Task

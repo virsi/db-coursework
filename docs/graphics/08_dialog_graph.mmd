@@ -1,0 +1,49 @@
+%% Лист 8. Граф диалога: переходы между формами с условиями.
+stateDiagram-v2
+    [*] --> Login
+
+    Login --> Login : неверный пароль /<br/>QMessageBox.critical
+    Login --> AdminMenu : role = admin
+    Login --> TeacherMenu : role = teacher
+    Login --> StudentMenu : role = student
+
+    state "Меню сотрудника" as AdminMenu
+    state "Меню преподавателя" as TeacherMenu
+    state "Меню студента" as StudentMenu
+
+    AdminMenu --> CRUDForm : открыть<br/>(студенты/курсы/…)
+    AdminMenu --> ReportForm : открыть отчёт
+    TeacherMenu --> CRUDForm : задания/варианты/оценки
+    TeacherMenu --> ReportForm : отчёты
+    StudentMenu --> ReportForm : мои курсы / оценки
+
+    state CRUDForm {
+        [*] --> Listing
+        Listing --> Editing : выбор строки
+        Listing --> Listing : Поиск
+        Editing --> Listing : Очистить
+        Editing --> Listing : Изменить /<br/>Удалить (после подтверждения)
+        Listing --> Print : Печать
+        Print --> Listing : закрыть предпросмотр
+    }
+
+    state ReportForm {
+        [*] --> Loaded
+        Loaded --> Loaded : Обновить
+        Loaded --> Print2 : Печать
+        Print2 --> Loaded : закрыть предпросмотр
+    }
+
+    CRUDForm --> AdminMenu : Назад
+    CRUDForm --> TeacherMenu : Назад
+    ReportForm --> AdminMenu : Закрыть
+    ReportForm --> TeacherMenu : Закрыть
+    ReportForm --> StudentMenu : Закрыть
+
+    AdminMenu --> Login : Выйти из аккаунта
+    TeacherMenu --> Login : Выйти из аккаунта
+    StudentMenu --> Login : Выйти из аккаунта
+
+    AdminMenu --> [*] : Выйти из приложения
+    TeacherMenu --> [*] : Выйти из приложения
+    StudentMenu --> [*] : Выйти из приложения

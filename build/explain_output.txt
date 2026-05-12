@@ -1,0 +1,115 @@
+docker compose exec -T postgres psql -U postgres -d ac_oudo -f /sql/05_optimize.sql
+DROP INDEX
+DROP INDEX
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=23.81..23.81 rows=2 width=1076) (actual time=0.676..0.681 rows=104 loops=1)
+   Sort Key: s.full_name, c.name
+   Sort Method: quicksort  Memory: 38kB
+   Buffers: shared hit=652
+   ->  GroupAggregate  (cost=23.74..23.80 rows=2 width=1076) (actual time=0.544..0.622 rows=104 loops=1)
+         Group Key: c.name, s.id
+         Buffers: shared hit=649
+         ->  Sort  (cost=23.74..23.75 rows=2 width=1044) (actual time=0.537..0.548 rows=316 loops=1)
+               Sort Key: c.name, s.id
+               Sort Method: quicksort  Memory: 62kB
+               Buffers: shared hit=649
+               ->  Nested Loop  (cost=7.25..23.73 rows=2 width=1044) (actual time=0.069..0.401 rows=316 loops=1)
+                     Join Filter: (s.id = e.student_id)
+                     Buffers: shared hit=646
+                     ->  Nested Loop  (cost=7.11..20.81 rows=9 width=532) (actual time=0.062..0.235 rows=316 loops=1)
+                           Buffers: shared hit=14
+                           ->  Hash Join  (cost=6.95..15.67 rows=84 width=24) (actual time=0.054..0.156 rows=316 loops=1)
+                                 Hash Cond: ((g.student_id = e.student_id) AND (t.course_id = e.course_id))
+                                 Buffers: shared hit=6
+                                 ->  Hash Join  (cost=3.35..10.40 rows=316 width=16) (actual time=0.024..0.087 rows=316 loops=1)
+                                       Hash Cond: (g.task_id = t.id)
+                                       Buffers: shared hit=5
+                                       ->  Seq Scan on grades g  (cost=0.00..6.16 rows=316 width=16) (actual time=0.003..0.026 rows=316 loops=1)
+                                             Buffers: shared hit=3
+                                       ->  Hash  (cost=2.60..2.60 rows=60 width=8) (actual time=0.015..0.015 rows=60 loops=1)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                             Buffers: shared hit=2
+                                             ->  Seq Scan on tasks t  (cost=0.00..2.60 rows=60 width=8) (actual time=0.002..0.007 rows=60 loops=1)
+                                                   Buffers: shared hit=2
+                                 ->  Hash  (cost=2.04..2.04 rows=104 width=8) (actual time=0.023..0.023 rows=104 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                                       Buffers: shared hit=1
+                                       ->  Seq Scan on enrollments e  (cost=0.00..2.04 rows=104 width=8) (actual time=0.005..0.010 rows=104 loops=1)
+                                             Filter: is_active
+                                             Buffers: shared hit=1
+                           ->  Memoize  (cost=0.15..0.63 rows=1 width=520) (actual time=0.000..0.000 rows=1 loops=316)
+                                 Cache Key: e.course_id
+                                 Cache Mode: logical
+                                 Hits: 312  Misses: 4  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                                 Buffers: shared hit=8
+                                 ->  Index Scan using courses_pkey on courses c  (cost=0.14..0.62 rows=1 width=520) (actual time=0.002..0.002 rows=1 loops=4)
+                                       Index Cond: (id = e.course_id)
+                                       Buffers: shared hit=8
+                     ->  Index Scan using students_pkey on students s  (cost=0.14..0.31 rows=1 width=520) (actual time=0.000..0.000 rows=1 loops=316)
+                           Index Cond: (id = g.student_id)
+                           Buffers: shared hit=632
+ Planning:
+   Buffers: shared hit=347
+ Planning Time: 1.643 ms
+ Execution Time: 0.786 ms
+(50 rows)
+
+CREATE INDEX
+CREATE INDEX
+ANALYZE
+ANALYZE
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=23.81..23.81 rows=2 width=1076) (actual time=0.625..0.629 rows=104 loops=1)
+   Sort Key: s.full_name, c.name
+   Sort Method: quicksort  Memory: 38kB
+   Buffers: shared hit=646
+   ->  GroupAggregate  (cost=23.74..23.80 rows=2 width=1076) (actual time=0.505..0.591 rows=104 loops=1)
+         Group Key: c.name, s.id
+         Buffers: shared hit=646
+         ->  Sort  (cost=23.74..23.75 rows=2 width=1044) (actual time=0.500..0.510 rows=316 loops=1)
+               Sort Key: c.name, s.id
+               Sort Method: quicksort  Memory: 62kB
+               Buffers: shared hit=646
+               ->  Nested Loop  (cost=7.25..23.73 rows=2 width=1044) (actual time=0.055..0.359 rows=316 loops=1)
+                     Join Filter: (s.id = e.student_id)
+                     Buffers: shared hit=646
+                     ->  Nested Loop  (cost=7.11..20.81 rows=9 width=532) (actual time=0.050..0.205 rows=316 loops=1)
+                           Buffers: shared hit=14
+                           ->  Hash Join  (cost=6.95..15.67 rows=84 width=24) (actual time=0.043..0.131 rows=316 loops=1)
+                                 Hash Cond: ((g.student_id = e.student_id) AND (t.course_id = e.course_id))
+                                 Buffers: shared hit=6
+                                 ->  Hash Join  (cost=3.35..10.40 rows=316 width=16) (actual time=0.018..0.070 rows=316 loops=1)
+                                       Hash Cond: (g.task_id = t.id)
+                                       Buffers: shared hit=5
+                                       ->  Seq Scan on grades g  (cost=0.00..6.16 rows=316 width=16) (actual time=0.003..0.017 rows=316 loops=1)
+                                             Buffers: shared hit=3
+                                       ->  Hash  (cost=2.60..2.60 rows=60 width=8) (actual time=0.011..0.012 rows=60 loops=1)
+                                             Buckets: 1024  Batches: 1  Memory Usage: 11kB
+                                             Buffers: shared hit=2
+                                             ->  Seq Scan on tasks t  (cost=0.00..2.60 rows=60 width=8) (actual time=0.001..0.004 rows=60 loops=1)
+                                                   Buffers: shared hit=2
+                                 ->  Hash  (cost=2.04..2.04 rows=104 width=8) (actual time=0.020..0.020 rows=104 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 13kB
+                                       Buffers: shared hit=1
+                                       ->  Seq Scan on enrollments e  (cost=0.00..2.04 rows=104 width=8) (actual time=0.004..0.010 rows=104 loops=1)
+                                             Filter: is_active
+                                             Buffers: shared hit=1
+                           ->  Memoize  (cost=0.15..0.63 rows=1 width=520) (actual time=0.000..0.000 rows=1 loops=316)
+                                 Cache Key: e.course_id
+                                 Cache Mode: logical
+                                 Hits: 312  Misses: 4  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                                 Buffers: shared hit=8
+                                 ->  Index Scan using courses_pkey on courses c  (cost=0.14..0.62 rows=1 width=520) (actual time=0.002..0.002 rows=1 loops=4)
+                                       Index Cond: (id = e.course_id)
+                                       Buffers: shared hit=8
+                     ->  Index Scan using students_pkey on students s  (cost=0.14..0.31 rows=1 width=520) (actual time=0.000..0.000 rows=1 loops=316)
+                           Index Cond: (id = g.student_id)
+                           Buffers: shared hit=632
+ Planning:
+   Buffers: shared hit=42 read=2
+ Planning Time: 0.846 ms
+ Execution Time: 0.704 ms
+(50 rows)
+

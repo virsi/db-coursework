@@ -1,0 +1,52 @@
+%% Лист 2. Диаграмма потоков данных (DFD), уровни 0 и 1.
+flowchart TB
+    AdminExt(["Сотрудник"]):::ext
+    TeacherExt(["Преподаватель"]):::ext
+    StudentExt(["Студент"]):::ext
+
+    P1[["1. Аутентификация"]]
+    P2[["2. Управление<br/>справочниками"]]
+    P3[["3. Учёт договоров<br/>и записей на курс"]]
+    P4[["4. Ведение заданий<br/>и оценок"]]
+    P5[["5. Формирование<br/>отчётов"]]
+
+    DS_USERS[("D1: users")]
+    DS_PEOPLE[("D2: students /<br/>teachers / employees")]
+    DS_REF[("D3: disciplines /<br/>courses")]
+    DS_DOCS[("D4: contracts /<br/>enrollments")]
+    DS_GRADES[("D5: tasks /<br/>variants / grades")]
+
+    AdminExt -->|логин,пароль| P1
+    TeacherExt -->|логин,пароль| P1
+    StudentExt -->|логин,пароль| P1
+    P1 -->|проверка хеша| DS_USERS
+    DS_USERS -->|роль| P1
+
+    AdminExt -->|CRUD-команды| P2
+    P2 --> DS_PEOPLE
+    DS_PEOPLE --> P2
+    P2 --> DS_REF
+    DS_REF --> P2
+    P2 -->|подтверждение| AdminExt
+
+    AdminExt -->|данные договора| P3
+    P3 --> DS_DOCS
+    DS_DOCS --> P3
+    P3 -->|подтверждение| AdminExt
+
+    TeacherExt -->|задания, варианты, оценки| P4
+    P4 --> DS_GRADES
+    DS_GRADES --> P4
+    P4 -->|подтверждение| TeacherExt
+
+    AdminExt -->|запрос отчёта| P5
+    TeacherExt -->|запрос отчёта| P5
+    StudentExt -->|запрос отчёта| P5
+    DS_REF --> P5
+    DS_GRADES --> P5
+    DS_DOCS --> P5
+    P5 -->|PDF / печать| AdminExt
+    P5 -->|PDF / печать| TeacherExt
+    P5 -->|PDF / печать| StudentExt
+
+    classDef ext fill:#fef3c7,stroke:#b45309,color:#000;

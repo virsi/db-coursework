@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+# Артефакты пост-обработки docx (создаются tools/fixup_docx_tables.py).
+*.docx.bak
+*.docx.tmp
+*.docx.patchtmp
+build/*.bak

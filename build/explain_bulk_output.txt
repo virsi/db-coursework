@@ -1,0 +1,67 @@
+Timing is on.
+DROP INDEX
+Time: 1.623 ms
+DROP INDEX
+Time: 0.609 ms
+ANALYZE
+Time: 2.562 ms
+=== ШАГ 2: план запроса БЕЗ функционального индекса ===
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Sort  (cost=50.46..50.47 rows=1 width=40) (actual time=0.296..0.296 rows=0 loops=1)
+   Sort Key: full_name
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=20
+   ->  Seq Scan on students  (cost=0.00..50.45 rows=1 width=40) (actual time=0.289..0.289 rows=0 loops=1)
+         Filter: (lower((full_name)::text) ~~ '%студент №5%'::text)
+         Rows Removed by Filter: 2030
+         Buffers: shared hit=20
+ Planning:
+   Buffers: shared hit=29
+ Planning Time: 0.107 ms
+ Execution Time: 0.304 ms
+(12 rows)
+
+Time: 0.707 ms
+CREATE INDEX
+Time: 1.595 ms
+ANALYZE
+Time: 2.110 ms
+=== ШАГ 4: план запроса С функциональным индексом ===
+                                                QUERY PLAN                                                
+----------------------------------------------------------------------------------------------------------
+ Sort  (cost=50.46..50.47 rows=1 width=40) (actual time=0.297..0.297 rows=0 loops=1)
+   Sort Key: full_name
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=20
+   ->  Seq Scan on students  (cost=0.00..50.45 rows=1 width=40) (actual time=0.294..0.294 rows=0 loops=1)
+         Filter: (lower((full_name)::text) ~~ '%студент №5%'::text)
+         Rows Removed by Filter: 2030
+         Buffers: shared hit=20
+ Planning:
+   Buffers: shared hit=27 read=1
+ Planning Time: 0.147 ms
+ Execution Time: 0.304 ms
+(12 rows)
+
+Time: 0.569 ms
+=== ШАГ 5: префиксный поиск — Index Scan по функциональному индексу ===
+                                                                QUERY PLAN                                                                 
+-------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=26.95..27.20 rows=103 width=32) (actual time=0.063..0.066 rows=100 loops=1)
+   Sort Key: full_name
+   Sort Method: quicksort  Memory: 29kB
+   Buffers: shared hit=2 read=2
+   ->  Index Scan using ix_students_fn_lower on students  (cost=0.28..23.50 rows=103 width=32) (actual time=0.022..0.049 rows=100 loops=1)
+         Index Cond: ((lower((full_name)::text) >= 'bulk-студент №15'::text) AND (lower((full_name)::text) < 'bulk-студент №16'::text))
+         Filter: (lower((full_name)::text) ~~ 'bulk-студент №15%'::text)
+         Buffers: shared hit=2 read=2
+ Planning:
+   Buffers: shared hit=18
+ Planning Time: 0.077 ms
+ Execution Time: 0.078 ms
+(12 rows)
+
+Time: 0.273 ms
+CREATE INDEX
+Time: 1.275 ms

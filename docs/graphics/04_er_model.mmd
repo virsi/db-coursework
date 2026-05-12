@@ -1,0 +1,101 @@
+%% Лист 4. Инфологическая (ER) модель АС ОУДО.
+erDiagram
+    USERS ||--o| EMPLOYEES   : "1:1"
+    USERS ||--o| TEACHERS    : "1:1"
+    USERS ||--o| STUDENTS    : "1:1"
+
+    EMPLOYEES ||--o{ CONTRACTS  : "заключает"
+    STUDENTS  ||--o{ CONTRACTS  : "об обучении"
+    TEACHERS  ||--o{ CONTRACTS  : "трудовой"
+
+    DISCIPLINES ||--o{ COURSES    : "реализуется"
+    TEACHERS    ||--o{ COURSES    : "ведёт"
+
+    STUDENTS  ||--o{ ENROLLMENTS  : "записан"
+    COURSES   ||--o{ ENROLLMENTS  : "принимает"
+
+    COURSES   ||--o{ TASKS        : "содержит"
+    TASKS     ||--o{ VARIANTS     : "имеет варианты"
+    TASKS     ||--o{ GRADES       : "оценивается"
+    STUDENTS  ||--o{ GRADES       : "получает"
+
+    USERS {
+        int    id PK
+        string login UK
+        string password_hash
+        string role "admin/teacher/student"
+        timestamp created_at
+    }
+    EMPLOYEES {
+        int    id PK
+        int    user_id FK
+        string full_name
+        string position
+        string access_level
+    }
+    TEACHERS {
+        int    id PK
+        int    user_id FK
+        string full_name
+        string position
+        string specialization
+    }
+    STUDENTS {
+        int    id PK
+        int    user_id FK
+        string full_name
+        date   enrollment_date
+        string status
+    }
+    DISCIPLINES {
+        int    id PK
+        string name UK
+        int    hours
+        text   description
+    }
+    COURSES {
+        int    id PK
+        string name
+        date   start_date
+        date   end_date
+        int    teacher_id FK
+        int    discipline_id FK
+    }
+    ENROLLMENTS {
+        int    id PK
+        int    student_id FK
+        int    course_id FK
+        date   enrollment_date
+        bool   is_active
+    }
+    CONTRACTS {
+        int    id PK
+        int    employee_id FK
+        int    student_id FK
+        int    teacher_id FK
+        string contract_type
+        date   contract_date
+        bool   is_active
+    }
+    TASKS {
+        int    id PK
+        int    course_id FK
+        string title
+        text   description
+        string type
+        timestamp deadline
+        int    max_score
+    }
+    VARIANTS {
+        int    id PK
+        int    task_id FK
+        int    number
+        text   description
+    }
+    GRADES {
+        int    id PK
+        int    student_id FK
+        int    task_id FK
+        int    score
+        timestamp graded_at
+    }

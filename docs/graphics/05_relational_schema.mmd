@@ -1,0 +1,100 @@
+%% Лист 5. Датологическая (реляционная) модель в типах PostgreSQL.
+classDiagram
+    class users {
+        +id SERIAL PK
+        login VARCHAR(64) UK NOT NULL
+        password_hash VARCHAR(72) NOT NULL
+        role VARCHAR(16) CHECK
+        created_at TIMESTAMP DEFAULT now()
+    }
+    class employees {
+        +id SERIAL PK
+        user_id INTEGER FK→users
+        full_name VARCHAR(255)
+        position VARCHAR(100)
+        access_level VARCHAR(32) CHECK
+    }
+    class teachers {
+        +id SERIAL PK
+        user_id INTEGER FK→users
+        full_name VARCHAR(255)
+        position VARCHAR(100)
+        specialization VARCHAR(150)
+    }
+    class students {
+        +id SERIAL PK
+        user_id INTEGER FK→users
+        full_name VARCHAR(255)
+        enrollment_date DATE
+        status VARCHAR(32) CHECK
+    }
+    class disciplines {
+        +id SERIAL PK
+        name VARCHAR(255) UK
+        hours INTEGER CHECK >0
+        description TEXT
+    }
+    class courses {
+        +id SERIAL PK
+        name VARCHAR(255)
+        start_date DATE
+        end_date DATE CHECK end>start
+        teacher_id INTEGER FK→teachers
+        discipline_id INTEGER FK→disciplines
+    }
+    class enrollments {
+        +id SERIAL PK
+        student_id INTEGER FK→students
+        course_id INTEGER FK→courses
+        enrollment_date DATE
+        is_active BOOLEAN
+        UNIQUE(student_id, course_id)
+    }
+    class contracts {
+        +id SERIAL PK
+        employee_id INTEGER FK→employees
+        student_id INTEGER FK→students NULL
+        teacher_id INTEGER FK→teachers NULL
+        contract_type VARCHAR(32) CHECK
+        contract_date DATE
+        is_active BOOLEAN
+    }
+    class tasks {
+        +id SERIAL PK
+        course_id INTEGER FK→courses
+        title VARCHAR(255)
+        description TEXT
+        type VARCHAR(32) CHECK
+        deadline TIMESTAMP
+        max_score INTEGER
+    }
+    class variants {
+        +id SERIAL PK
+        task_id INTEGER FK→tasks
+        number INTEGER
+        description TEXT
+        UNIQUE(task_id, number)
+    }
+    class grades {
+        +id SERIAL PK
+        student_id INTEGER FK→students
+        task_id INTEGER FK→tasks
+        score INTEGER CHECK 0..100
+        graded_at TIMESTAMP
+        UNIQUE(student_id, task_id)
+    }
+
+    users <|-- employees
+    users <|-- teachers
+    users <|-- students
+    employees "1" --> "*" contracts
+    students  "1" --> "*" contracts
+    teachers  "1" --> "*" contracts
+    disciplines "1" --> "*" courses
+    teachers    "1" --> "*" courses
+    students    "1" --> "*" enrollments
+    courses     "1" --> "*" enrollments
+    courses     "1" --> "*" tasks
+    tasks       "1" --> "*" variants
+    tasks       "1" --> "*" grades
+    students    "1" --> "*" grades

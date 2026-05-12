@@ -1,0 +1,31 @@
+%% Лист 6. Схема работы системы.
+flowchart TD
+    Start([Запуск приложения]) --> Login[Окно авторизации]
+
+    Login -->|admin| AdminMenu[Меню сотрудника]
+    Login -->|teacher| TeacherMenu[Меню преподавателя]
+    Login -->|student| StudentMenu[Меню студента]
+    Login -->|неверные данные| LoginErr{{Сообщение об ошибке}}
+    LoginErr --> Login
+
+    AdminMenu --> AdminCRUD[CRUD-формы:<br/>Студенты, Преподаватели,<br/>Сотрудники, Дисциплины,<br/>Курсы, Запись на курс,<br/>Договоры]
+    AdminMenu --> AdminRep[Отчёты:<br/>Список курсов, Сводка по записи,<br/>Преподаватели и курсы]
+
+    TeacherMenu --> TeacherCRUD[CRUD-формы:<br/>Задания, Варианты, Оценки]
+    TeacherMenu --> TeacherRep[Отчёты:<br/>100-балльная система,<br/>Средний балл,<br/>Баллы студента]
+
+    StudentMenu --> StudentRep[Отчёты:<br/>Мои курсы, Мои оценки,<br/>100-балльная система]
+
+    AdminCRUD -->|Назад| AdminMenu
+    AdminRep -->|Закрыть| AdminMenu
+    TeacherCRUD -->|Назад| TeacherMenu
+    TeacherRep -->|Закрыть| TeacherMenu
+    StudentRep -->|Закрыть| StudentMenu
+
+    AdminMenu -->|Выйти из аккаунта| Login
+    TeacherMenu -->|Выйти из аккаунта| Login
+    StudentMenu -->|Выйти из аккаунта| Login
+
+    AdminMenu -->|Выйти из приложения| End([Завершение])
+    TeacherMenu -->|Выйти из приложения| End
+    StudentMenu -->|Выйти из приложения| End

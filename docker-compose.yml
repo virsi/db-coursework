@@ -1,0 +1,29 @@
+# Локальный PostgreSQL для курсовой АС ОУДО.
+# Запуск: docker compose up -d  (или make db-up).
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ac_oudo_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ac_oudo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      TZ: Europe/Moscow
+    ports:
+      # Порт 5432 уже может быть занят локальным Postgres или другим контейнером.
+      # На хосте курсовая использует 5433 — это значение совпадает с .env.example.
+      - "5433:5432"
+    volumes:
+      - ac_oudo_pgdata:/var/lib/postgresql/data
+      - ./sql:/sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ac_oudo"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  ac_oudo_pgdata:
