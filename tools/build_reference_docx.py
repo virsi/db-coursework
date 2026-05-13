@@ -66,7 +66,14 @@ def set_section_margins(doc: Document) -> None:
 
 
 def _force_rfonts(element, name: str = "Times New Roman") -> None:
-    """Принудительно зафиксировать шрифт для ascii/hAnsi/cs/eastAsia."""
+    """Принудительно зафиксировать шрифт для ascii/hAnsi/cs/eastAsia.
+
+    В унаследованных стилях pandoc/Word могут стоять theme-атрибуты
+    (`asciiTheme`, `hAnsiTheme`, `cstheme`, `eastAsiaTheme`). По правилам
+    OOXML theme-атрибут перебивает явный `w:ascii=...` и подтягивает
+    шрифт из `theme1.xml` (по умолчанию — Aptos Display). Удаляем их,
+    чтобы заголовки реально рендерились в Times New Roman.
+    """
     rPr = element.get_or_add_rPr()
     rFonts = rPr.find(qn("w:rFonts"))
     if rFonts is None:
@@ -74,6 +81,9 @@ def _force_rfonts(element, name: str = "Times New Roman") -> None:
         rPr.append(rFonts)
     for attr in ("ascii", "hAnsi", "cs", "eastAsia"):
         rFonts.set(qn(f"w:{attr}"), name)
+    for attr in ("asciiTheme", "hAnsiTheme", "cstheme", "eastAsiaTheme"):
+        if rFonts.get(qn(f"w:{attr}")) is not None:
+            del rFonts.attrib[qn(f"w:{attr}")]
 
 
 def set_run_font(run, *, name: str = "Times New Roman", size: int = 14,
@@ -326,26 +336,39 @@ def main() -> None:
         cap_pf.keep_with_next = False
         _force_rfonts(cap.element)
 
-    # Кодовые блоки — Courier New 11pt, чёрные, без первой строки.
+    # Кодовые блоки — Courier New 11pt, чёрные, по левому краю, без
+    # красной строки, с отступом слева 1 см (так пользователь оформил
+    # все запросы и команды вручную в build/Воробьёв_РПЗ.docx).
+    # Pandoc генерирует стиль с именем «Source Code» (id `SourceCode`),
+    # если он есть в reference — берёт его настройки. Если отсутствует —
+    # создаёт свой с дефолтами. Поэтому регистрируем стиль явно, не
+    # полагаясь на наличие в pandoc-default reference.
+    if "Source Code" not in doc.styles:
+        doc.styles.add_style("Source Code", WD_STYLE_TYPE.PARAGRAPH)
     for code_style in ("Source Code", "Verbatim Char"):
-        if code_style in doc.styles:
-            cs = doc.styles[code_style]
-            cs.font.name = "Courier New"
-            cs.font.size = Pt(11)
-            cs.font.color.rgb = BLACK
-            if hasattr(cs, "paragraph_format"):
-                try:
-                    cs.paragraph_format.first_line_indent = Cm(0)
-                    cs.paragraph_format.line_spacing = 1.0
-                except Exception:
-                    pass
-            rPr = cs.element.get_or_add_rPr()
-            rFonts = rPr.find(qn("w:rFonts"))
-            if rFonts is None:
-                rFonts = OxmlElement("w:rFonts")
-                rPr.append(rFonts)
-            for attr in ("ascii", "hAnsi", "cs"):
-                rFonts.set(qn(f"w:{attr}"), "Courier New")
+        if code_style not in doc.styles:
+            continue
+        cs = doc.styles[code_style]
+        cs.font.name = "Courier New"
+        cs.font.size = Pt(11)
+        cs.font.color.rgb = BLACK
+        if hasattr(cs, "paragraph_format"):
+            try:
+                cpf = cs.paragraph_format
+                cpf.first_line_indent = Cm(0)
+                cpf.left_indent = Cm(1.0)
+                cpf.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                cpf.line_spacing = 1.0
+                cpf.line_spacing_rule = WD_LINE_SPACING.SINGLE
+            except Exception:
+                pass
+        rPr = cs.element.get_or_add_rPr()
+        rFonts = rPr.find(qn("w:rFonts"))
+        if rFonts is None:
+            rFonts = OxmlElement("w:rFonts")
+            rPr.append(rFonts)
+        for attr in ("ascii", "hAnsi", "cs"):
+            rFonts.set(qn(f"w:{attr}"), "Courier New")
 
     # Гиперссылки — чёрные без подчёркивания (как в печатном тексте).
     if "Hyperlink" in doc.styles:

@@ -174,7 +174,7 @@ rpz: mermaid screenshots $(REF_DOCX) $(DOCX) ## Собрать РПЗ.docx со 
 $(REF_DOCX): tools/build_reference_docx.py
 	$(PY) tools/build_reference_docx.py
 
-$(DOCX): $(RPZ_SRC) $(MMD_PNGS) $(REF_DOCX) tools/fixup_docx_tables.py
+$(DOCX): $(RPZ_SRC) $(MMD_PNGS) $(REF_DOCX) tools/fixup_docx_tables.py tools/build_preamble.py tools/fill_toc.py tools/assets/bmstu_logo.png
 	@mkdir -p $(DOCS_OUT)
 	pandoc $(RPZ_SRC) \
 	    --resource-path=docs:. \
@@ -186,7 +186,15 @@ $(DOCX): $(RPZ_SRC) $(MMD_PNGS) $(REF_DOCX) tools/fixup_docx_tables.py
 	    --metadata lang="ru-RU" \
 	    --output $(DOCX)
 	$(PY) tools/fixup_docx_tables.py $(DOCX)
-	@echo "Готово: $(DOCX)"
+	$(PY) tools/build_preamble.py $(DOCX)
+	# Двухпроходная подстановка номеров страниц в TOC:
+	# 1) преварительный PDF для определения страниц заголовков,
+	# 2) обновление docx через fill_toc.py,
+	# 3) финальный PDF собирается отдельной целью `rpz-pdf-final`.
+	soffice --headless --convert-to pdf --outdir $(DOCS_OUT) $(DOCX) >/dev/null
+	$(PY) tools/fill_toc.py $(DOCX) $(PDF)
+	soffice --headless --convert-to pdf --outdir $(DOCS_OUT) $(DOCX) >/dev/null
+	@echo "Готово: $(DOCX) и $(PDF)"
 
 .PHONY: rpz-pdf
 rpz-pdf: mermaid $(PDF) ## Собрать РПЗ.pdf (требует LaTeX)

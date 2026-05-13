@@ -9,3 +9,5 @@ __pycache__/
 *.docx.tmp
 *.docx.patchtmp
 build/*.bak
+
+*.manual_backup.docx
